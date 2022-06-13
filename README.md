@@ -111,3 +111,36 @@ f(ptr);                     // 传递型别为const char* const的实参
 星号左侧const将ptr指涉到的对象声明为const：该字符串不可修改  
 此时，ptr的常量性被忽略，但指涉到的对象的常量性会被保留，param的型别会被推导为const char*, 即一个可修改的、指涉到一个const字符串的指针
 
+### 数组实参
+```cpp
+const char name[] = "J. P. Briggs";   // name型别：const char[13]
+const char* ptrToName = name;         // 数组退化成指针
+
+void myFunc(int param[]); 声明等价于 void myFunc(int* param);
+
+template<typename T>
+void f(T param);
+f(name);    // name是数组，但是T的型别推导成const char*
+
+template<typename T>
+void f(T& param);   // 按引用方式传递形参的模板
+f(name);
+此时 T的型别会被推导成实际的数组型别 T：const char [13] 
+f的形参（该数组的一个引用）：const char (&)[13]
+```
+
+### 函数实参
+```cpp
+void someFunc(int, double);   // someFunc: void(int, double)
+
+template<typename T>
+void f1(T param);
+
+template<typename T>
+void f2(T& param);
+
+f1(someFunc);    // param: 函数指针 void (*)(int, double)
+
+f2(someFunc);    // param: 函数引用 void (&)(int, double)
+```
+
