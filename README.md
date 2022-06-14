@@ -144,3 +144,10 @@ f1(someFunc);    // param: 函数指针 void (*)(int, double)
 f2(someFunc);    // param: 函数引用 void (&)(int, double)
 ```
 
+## 条款2：理解auto型别推导
+当某变量采用auto来声明时，auto就扮演了模板中的T这个角色，而变量的型别饰词则扮演的是ParamType的角色
+```cpp
+auto x = 27;          // 型别饰词：auto本身
+const auto cx = x;    // 型别饰词：const auto
+const auto& rx = x;   // 型别饰词：const auto&
+```
