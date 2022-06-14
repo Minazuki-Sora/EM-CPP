@@ -151,3 +151,49 @@ auto x = 27;          // 型别饰词：auto本身
 const auto cx = x;    // 型别饰词：const auto
 const auto& rx = x;   // 型别饰词：const auto&
 ```
+概念性模板、概念性语句：意指概念上等价，并非真实操作
+```cpp
+template<typename T>         // 为推导x的型别而生成的概念性模板
+void func_for_x(T param);   
+
+func_for_x(27);              // 概念性调用语句：推导得出的param型别
+                             // 就是x型别
+                             
+template<typename T>         // 为推导rx的型别而生成的概念性模板
+void func_for_rx(const T& param);
+
+func_for_rx(x);              // 概念性调用语句：推导得出的param型别
+                             // 就是rx型别
+```
+在采用auto进行变量声明中，型别饰词取代ParamType，也存在三种情况
+
+### auto与模板不同点：
+```cpp
+auto x1 = 27;                // 型别int,值为27
+auto x2(27);                 // 同上
+auto x3 = {27};              // 型别std::initializer_list<int>,值为{27}
+auto x4{27};                 // 同上
+```
+于是如果大括号中的值型别不一致，代码就通不过编译
+```cpp
+auto x5 = {1, 2, 3.0}        // 错误
+                             // 推导不出std::initializer_list<T>中的T
+```
+当采用auto声明的变量使用大括号初始化表达式进行初始化时，推导所得的型别是std::initializer_list的一个实例型别。但是，如果向对应的模板传入一个同样的初始化表达式，型别推导就会失败
+```cpp
+auto x = {1, 2, 3};          // x型别std::initializer_list<int>
+
+template<typename T>         // 带有形参的模板
+void f(T param);             // 与x的声明等价的声明式
+
+f({1, 2, 3});                // 错误！无法推导T的型别
+```
+auto会假定用大括号括起的初始化表达式代表一个std::initializer_list，但模板推导不会
+```cpp
+template<typename T>         
+void f(std::initializer_list<T> initList);             
+
+f({1, 2, 3});  
+```
+C++14允许使用auto来说明函数返回值需要推导，而且C++14中的lambda式也会在形参声明中用到auto  
+然而，这些auto用法是在使用模板型别推导，即大括号括起的初始化表达式是无法返回的
