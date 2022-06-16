@@ -211,3 +211,61 @@ auto authAndAccess(Container& c, Index i)
 ```
 在函数名字之前使用的那个auto和型别推导没有关系，它是为了说明这里使用了C++11中的`返回值型别尾序语法`，即该函数的返回值型别将在形参列表之后（在->之后）  
 尾序返回值的好处在于，在指定返回值型别时可以使用函数形参，上例中先声明c,i再使用其指定返回值型别
+
+但是因为模板型别推导过程中，初始化表达的引用性会被忽略
+```cpp
+std::deque<int> d;
+...
+authAndAccess(d, 5) = 10;      // 验证用户，并返回d[5]
+                               // 然后将其赋值为10
+                               // 这段代码无法通过编译
+```
+此处，d[5]返回的是int&，但是auto型别推导将其变为int。作为函数的返回值，该int是一个右值，而将10赋值给int是禁止行为  
+解决：使用decltype(auto)饰词：auto指定了欲实施推导的型别，而推导过程中采用的是decltype的规则
+```cpp
+template<typename Container, typename Index>         // C++14 能运作，但是亟需改进
+decltype(auto) 
+authAndAccess(Container& c, Index i)
+{
+  authenticateUser();  
+  return c[i];
+}
+```
+
+为了能够向该函数传递右值容器（右值是不能绑定到左值引用的Container&，除非是对常量的左值引用），使用万能引用
+```cpp
+template<typename Container, typename Index>         // C++14最终版
+decltype(auto) 
+authAndAccess(Container&& c, Index i)
+{
+  authenticateUser();  
+  return std::forward<Container>(c)[i];
+}
+
+template<typename Container, typename Index>         // C++11最终版
+auto 
+authAndAccess(Container&& c, Index i)
+-> decltype(std::forward<Container>(c)[i])
+{
+  authenticateUser();  
+  return std::forward<Container>(c)[i];
+}
+```
+
+C++14中
+```cpp
+decltype(auto) f1()
+{
+  int x = 0;
+  ...
+  return x;                                         // decltype(x)是int，所以f1返回的是int
+}
+
+decltype(auto) f2()
+{
+  int x = 0;
+  ...
+  return (x);                                         // (x):一个比仅有名字更复杂的表达式 decltype((x))是int&，所以f2返回的是int&
+}
+```
+此时，f2返回了一个局部变量的引用！会导致未定义行为！
