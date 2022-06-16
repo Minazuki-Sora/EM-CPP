@@ -197,3 +197,17 @@ f({1, 2, 3});
 ```
 C++14允许使用auto来说明函数返回值需要推导，而且C++14中的lambda式也会在形参声明中用到auto  
 然而，这些auto用法是在使用模板型别推导，即大括号括起的初始化表达式是无法返回的
+
+## 条款3：理解decltype
+C+11中，decltype的主要用途大概就在于声明那些返回值型别依赖于形参型别的函数模板。
+```cpp
+template<typename Container, typename Index>         // 能运作，但是亟需改进
+auto authAndAccess(Container& c, Index i)
+  -> decltype(c[i])
+{
+  authenticateUser();  
+  return c[i];
+}
+```
+在函数名字之前使用的那个auto和型别推导没有关系，它是为了说明这里使用了C++11中的`返回值型别尾序语法`，即该函数的返回值型别将在形参列表之后（在->之后）  
+尾序返回值的好处在于，在指定返回值型别时可以使用函数形参，上例中先声明c,i再使用其指定返回值型别
