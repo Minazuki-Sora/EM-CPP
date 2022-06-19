@@ -269,3 +269,38 @@ decltype(auto) f2()
 }
 ```
 此时，f2返回了一个局部变量的引用！会导致未定义行为！
+
+## 条款4：掌握查看型别推导结果的方法
+### IDE编辑器
+对于平凡、简单的型别，**代码处于可编译的状态时**，鼠标指针悬停在某个程序实体上，代码编辑器能够显示出该实体的型别。
+```cpp
+const int theAnswer = 42;
+
+auto x = theAnswer;
+auto y = &theAnswer;
+```
+
+### 编译器诊断信息
+使用希望知道的型别导致某些编译错误，报告错误的消息几乎肯定会提及导致该错误的型别
+实例：
+```cpp
+template<typename T>                                 // 只是声明TD而不定义
+class TD;                                            // TD是“型别显示类”（Type Displayer）的缩写
+
+TD<decltype(x)> xType;                               // 诱发包括x和y的型别错误消息
+TD<decltype(y)> yType;
+```
+诊断信息可能是：
+```cpp
+error: aggregate 'TD<int> xType' has incomplete type and cannot be defined
+
+error: 'yType' uses undefined class 'TD<const int*>'
+```
+
+### 运行时输出
+利用typeid和std::type_info::name
+```cpp
+std::cout << typeid(x).name() << '\n';
+std::cout << typeid(y).name() << '\n';
+```
+针对某个对象，如x和y调用typeid，就得到一个std::type_info对象，而后者拥有成员函数name，该函数产生一个代表型别的C-style的字符串（即一个const char*）
